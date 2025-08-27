@@ -7,15 +7,13 @@ const { notFound, errorHandler } = require("../middlewares/error");
 
 // Routes import
 const authRoutes = require("../routes/auth.routes");
+const userRoutes = require("../routes/user.routes");
 
 function expressLoader() {
   const app = express();
 
   // Güvenlik middleware'leri
   applySecurity(app);
-
-  // middlewares
-  app.use(cors()); 
 
   // body parsing middleware
   app.use(express.json({ limit: "10mb" }));
@@ -35,6 +33,7 @@ function expressLoader() {
   });
   // API Routes
   app.use("/api/auth", authRoutes);
+  app.use("/api/users", userRoutes);
 
   //404 Handler
   app.use(notFound);
