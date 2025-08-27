@@ -5,6 +5,9 @@ const morgan = require("morgan");
 const applySecurity = require("../middlewares/security");
 const { notFound, errorHandler } = require("../middlewares/error");
 
+// Routes import
+const authRoutes = require("../routes/auth.routes");
+
 function expressLoader() {
   const app = express();
 
@@ -23,7 +26,8 @@ function expressLoader() {
     app.use(morgan("dev"));
   }
 
-  // routes
+  // API Routes
+  app.use("/api/auth", authRoutes);
 
   //404 Handler
   app.use(notFound);
