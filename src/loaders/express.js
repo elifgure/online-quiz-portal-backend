@@ -7,6 +7,7 @@ const { notFound, errorHandler } = require("../middlewares/error");
 // Routes import
 const authRoutes = require("../routes/auth.routes");
 const userRoutes = require("../routes/user.routes");
+const questionRoutes = require("../routes/question.routes")
 
 function expressLoader() {
   const app = express();
@@ -33,6 +34,7 @@ function expressLoader() {
   // API Routes
   app.use("/api/auth", authRoutes);
   app.use("/api/users", userRoutes);
+  app.use("/api/questions", questionRoutes)
 
   //404 Handler
   app.use(notFound);

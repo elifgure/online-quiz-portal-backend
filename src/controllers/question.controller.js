@@ -22,8 +22,6 @@ const createQuestion = asyncHandler(async (req, res, next) => {
   res.status(200).json(new ApiResponse(200, "Soru Oluşturuldu", question));
 });
 
-
-
 // Soru Güncelleme
 const updateQuestion = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
