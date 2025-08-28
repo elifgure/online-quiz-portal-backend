@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-
 // Şıklar için schema
 const optionSchema = new mongoose.Schema({
   text: {
