@@ -1,6 +1,5 @@
 // express app setup
 const express = require("express");
-const cors = require("cors");
 const morgan = require("morgan");
 const applySecurity = require("../middlewares/security");
 const { notFound, errorHandler } = require("../middlewares/error");
