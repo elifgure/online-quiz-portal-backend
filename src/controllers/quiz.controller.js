@@ -84,3 +84,25 @@ const updateQuiz = asyncHandler(async (req, res, next) => {
   res.staus(200).json(new ApiResponse(200, "Quiz Güncellendi", updateQuiz));
 });
 // Quiz Silme İşlemi
+const deleteQuiz= asyncHandler(async (req, res, next)=>{
+  const {id} = req.params
+   const user = req.user;
+
+  const quiz = await Quiz.findById(id)
+  if(!quiz) return next(new ApiError(404, "Quiz Bulunamadı"))
+
+    if(user.role === "teacher" && !quiz.createdBy.equals(user._id)){
+       return next(new ApiError(403, "Bu quiz'i silme yetkiniz yok"));
+    }
+  await Quiz.findOneAndDelete({ _id: id });
+   res
+    .status(200)
+    .json(new ApiResponse(200, "Quiz ve ilişkili sorular başarıyla silindi"));
+})
+
+module.exports = {
+  getQuizzes,
+  createQuiz,
+  updateQuiz,
+  deleteQuiz
+}

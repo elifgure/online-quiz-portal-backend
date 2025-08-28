@@ -10,6 +10,7 @@ const { updateRoleValidators } = require("../validators/user.validators");
 
 const router = express.Router();
 
+// Routes
 router.get("/profile", authenticate, getProfile);
 router.get("/", authenticate, authorize("admin"), getAllUsers);
 router.patch(
