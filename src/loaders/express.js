@@ -49,4 +49,4 @@ function expressLoader() {
   return app;
 }
 
-module.exports = express;
+module.exports = expressLoader

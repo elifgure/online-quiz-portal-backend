@@ -4,7 +4,6 @@ const Quiz = require("../models/Quizzes");
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const asyncHandler = require("../utils/asyncHandler");
-const Result = require("../models/Results");
 
 // Sonuç Oluşturma
 const createResult = asyncHandler(async (req, res, next) => {
@@ -16,9 +15,9 @@ const createResult = asyncHandler(async (req, res, next) => {
   // Quizdeki soruları çek
   const questions = await Question.find({ _id: { $in: quiz.questions } });
   // Cevapları işle
-  let correctAnswerCount = 0;
+  let correctAnswersCount = 0;
   const processedAnswers = answers.map((answer) => {
-    const question = questions.find(ön);
+    const question = questions.find(q => q._id.toString() === answer.questionId);
     if (!question) return next(new ApiError(400, "Geçersiz soru ID'si"));
     let isCorrect = false;
     // Soru tipine göre kontrol

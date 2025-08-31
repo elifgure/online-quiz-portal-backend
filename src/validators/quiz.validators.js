@@ -7,6 +7,7 @@ const quizValidators = [
     .isString()
     .withMessage("Başlık string olmalı"),
   body("duration")
+    .notEmpty()
     .withMessage("Quiz süresi gerekli")
     .isInt({ min: 1 })
     .withMessage("Süre en az 1 dakika olmalı"),

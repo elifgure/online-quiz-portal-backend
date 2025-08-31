@@ -23,3 +23,5 @@ router.post('/login', loginValidators, validate, login)
 router.post('/refresh', refreshValidators, validate, refresh)
 
 router.post('/logout', authenticate, logout)
+
+module.exports = router;

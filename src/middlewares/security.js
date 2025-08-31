@@ -1,16 +1,40 @@
 const helmet = require("helmet");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
-const xss = require("xss-clean");
-const mongoSanitaze = require("express-mongo-sanitize");
 const hpp = require("hpp");
+
+// MongoDB injection önleme için custom middleware
+const customMongoSanitize = (req, res, next) => {
+  const sanitizeValue = (obj) => {
+    for (let key in obj) {
+      if (obj[key] && typeof obj[key] === 'object') {
+        sanitizeValue(obj[key]);
+      } else {
+        if (typeof obj[key] === 'string') {
+          // MongoDB operatör karakterlerini kontrol et
+          if (obj[key].includes('$') || obj[key].includes('.')) {
+            delete obj[key];
+          }
+        }
+      }
+    }
+    return obj;
+  };
+
+  if (req.body) req.body = sanitizeValue(req.body);
+  if (req.params) req.params = sanitizeValue(req.params);
+  
+  next();
+};
 
 const applySecurity = (app) => {
   // Helmet - güvenlik headers
+  // Helmet güvenlik başlıkları
   app.use(
     helmet({
       contentSecurityPolicy: false, // Swagger için devre dışı
       crossOriginEmbedderPolicy: false,
+      xssFilter: true, // XSS koruması aktif
     })
   );
   // CORS
@@ -47,11 +71,9 @@ const applySecurity = (app) => {
   });
   app.use("/api", limiter);
 
-  // XSS temizleme
-  app.use(xss());
-
-  // NoSQL injection temizleme
-  app.use(mongoSanitize());
+  // NoSQL injection temizleme - custom middleware
+  app.use(customMongoSanitize);
+  
   // HTTP parametre kirlenmesi önleme
   app.use(
     hpp({
