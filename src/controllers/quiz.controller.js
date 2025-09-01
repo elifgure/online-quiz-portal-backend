@@ -10,8 +10,6 @@ const getQuizzes = asyncHandler(async (req, res, next) => {
   if (!user) {
     return next(new ApiError(401, "Kullanıcı Bulanamadı"));
   }
-  let quizzesQuery;
-
   let query;
 
   if (user.role === "student") {
@@ -51,7 +49,6 @@ const createQuiz = asyncHandler(async (req, res, next) => {
   if (!["teacher", "admin"].includes(user.role)) {
     return next(new ApiError(403, "Bu işlemi gerçekleştirme yetkiniz yok"));
   }
-
   // Önce quiz'i oluştur
   const quiz = new Quiz({
     title,
@@ -137,10 +134,7 @@ const updateQuiz = asyncHandler(async (req, res, next) => {
     // Quiz'in soru listesini güncelle
     quiz.questions = currentQuestions;
   }
-
-  // Quiz'i kaydet
   await quiz.save();
-
   // Güncel quiz'i döndür
   const updatedQuiz = await Quiz.findById(id)
     .populate('questions')
