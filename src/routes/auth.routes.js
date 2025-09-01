@@ -4,6 +4,8 @@ const {
   login,
   refresh,
   logout,
+  forgotPassword,
+  resetPassword
 } = require("../controllers/auth.controller");
 const { authenticate } = require("../middlewares/auth");
 const validate = require("../middlewares/validate");
@@ -23,5 +25,9 @@ router.post('/login', loginValidators, validate, login)
 router.post('/refresh', refreshValidators, validate, refresh)
 
 router.post('/logout', authenticate, logout)
+
+// Şifre sıfırlama routes
+router.post('/forgot-password', forgotPassword)
+router.post('/reset-password/:token', resetPassword)
 
 module.exports = router;

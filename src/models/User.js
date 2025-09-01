@@ -11,10 +11,12 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "teacher", "student"],
       default: "student",
     },
-    refreshTokens: [{
-      type: String,
-      required: true
-    }],
+    refreshTokens: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -30,7 +32,16 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.comparePassword = function (candidate) {
   return bcrypt.compare(candidate, this.password);
 };
-
+// Şifre sıfırlama tokeni oluştur
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = require("crypto").randomBytes(32).toString("hex");
+  this.resetPasswordToken = require("crypto")
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  this.resetPasswordExpire = Date.now() + 3600000;
+  return resetToken;
+};
 // // JSON dönüştürürken hassas bilgileri kaldır
 // userSchema.methods.toJSON = function() {
 //   const userObject = this.toObject();

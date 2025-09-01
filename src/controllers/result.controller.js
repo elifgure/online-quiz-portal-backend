@@ -22,13 +22,15 @@ const createResult = asyncHandler(async (req, res, next) => {
     let isCorrect = false;
     // Soru tipine göre kontrol
     if (question.type === "multiple-choice") {
-      if (answer.userAnswer === question.correctAnswer) {
-        isCorrect = true;
-      }
+      // Doğru seçeneği bul
+      const correctOption = question.options.find(opt => opt.isCorrect);
+      isCorrect = correctOption && answer.userAnswer === correctOption.text;
     } else if (question.type === "true-false") {
-      if (answer.userAnswer === question.correctAnswer) {
-        isCorrect = true;
-      }
+      // True/False sorularında kullanıcının true/false cevabını Doğru/Yanlış ile eşleştir
+      const userAnswerBoolean = answer.userAnswer.toLowerCase() === 'true';
+      const correctOption = question.options.find(opt => opt.isCorrect);
+      isCorrect = (userAnswerBoolean && correctOption.text === 'Doğru') || 
+                 (!userAnswerBoolean && correctOption.text === 'Yanlış');
     } else if (question.type === "text") {
       if (
         typeof answer.userAnswer === "string" &&
@@ -63,7 +65,7 @@ const createResult = asyncHandler(async (req, res, next) => {
 });
 // Öğrenci sonuçlarının listelenmesi
 const getMyResults = asyncHandler(async (req, res, next) => {
-  const results = await Result.find({ userId: req.user._id })
+  const results = await Result.find({ student: req.user._id })
     .populate("quiz", "title")
     .sort({ createdAt: -1 });
   if (!results || results.length === 0) {
@@ -76,8 +78,43 @@ const getResultById = asyncHandler(async (req, res, next) => {
   const result = await Result.findById(req.params.id)
     .populate("quiz", "title")
     .populate("student", "name email");
+    
   if (!result) return next(new ApiError(404, "Sonuç Bulunamadı"));
-  res.status(200).json(new ApiResponse(200, "Quiz Sonucu", result));
+
+  // Sonuçtaki her cevap için doğru cevapları al
+  const answersWithCorrect = await Promise.all(
+    result.answers.map(async (answer) => {
+      const question = await Question.findById(answer.questionId).select('questionText correctAnswer type options');
+      
+      let correctAnswerText;
+      if (question.type === 'multiple-choice') {
+        const correctOption = question.options.find(opt => opt.isCorrect);
+        correctAnswerText = correctOption ? correctOption.text : null;
+      } else if (question.type === 'true-false') {
+        const correctOption = question.options.find(opt => opt.isCorrect);
+        correctAnswerText = correctOption ? correctOption.text : null;
+      } else {
+        correctAnswerText = question.correctAnswer;
+      }
+
+      return {
+        ...answer.toObject(),
+        question: {
+          questionText: question.questionText,
+          type: question.type,
+          options: question.options,
+          correctAnswerText: correctAnswerText // Doğru cevabın metni
+        }
+      };
+    })
+  );
+
+  const resultWithAnswers = {
+    ...result.toObject(),
+    answers: answersWithCorrect
+  };
+
+  res.status(200).json(new ApiResponse(200, "Quiz Sonucu", resultWithAnswers));
 });
 // Öğretmen için sonuçların listelenmesi
 const getMyQuizResults = asyncHandler(async (req, res, next) => {
