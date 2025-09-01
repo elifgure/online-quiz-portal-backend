@@ -10,17 +10,23 @@ const {
 
 // Kayıt
 const register = asyncHandler(async (req, res, next) => {
-  const { email, name, password } = req.body;
+  const { email, name, password, role } = req.body;
   // Email kontrolü
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     return next(new ApiError(400, "Bu email adresi zaten kayıtlı"));
+  }
+    // İsim kontrolü
+  const existingUserByName = await User.findOne({ name });
+  if (existingUserByName) {
+    return next(new ApiError(400, "Bu kullanıcı adı zaten alınmış"));
   }
   // Kullanıcı oluştur
   const user = await User.create({
     name,
     email,
     password,
+    role
   });
   // Token'lar oluştur
   const payload = { id: user._id, role: user.role };
