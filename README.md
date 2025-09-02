@@ -1,4 +1,4 @@
-# On## 🚀 Özellikler
+# 🚀 Özellikler
 
 - 👥 Kullanıcı Yönetimi (Kayıt, Giriş, Token Yenileme)
 - 🔐 JWT tabanlı kimlik doğrulama ve yetkilendirme
