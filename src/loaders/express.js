@@ -1,6 +1,8 @@
 // express app setup
 const express = require("express");
 const morgan = require("morgan");
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('../config/swagger');
 const applySecurity = require("../middlewares/security");
 const { notFound, errorHandler } = require("../middlewares/error");
 
@@ -33,6 +35,9 @@ function expressLoader() {
       timestamp: new Date().toISOString(),
     });
   });
+  // Swagger Documentation
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  
   // API Routes
   app.use("/api/auth", authRoutes);
   app.use("/api/users", userRoutes);

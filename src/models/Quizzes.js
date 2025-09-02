@@ -1,6 +1,47 @@
 const mongoose = require("mongoose");
 const Question = require("./Questions")
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Quiz:
+ *       type: object
+ *       required:
+ *         - title
+ *         - duration
+ *         - category
+ *         - questions
+ *         - createdBy
+ *       properties:
+ *         title:
+ *           type: string
+ *           description: Quiz başlığı
+ *         duration:
+ *           type: number
+ *           description: Quiz süresi (dakika)
+ *           minimum: 1
+ *         category:
+ *           type: string
+ *           description: Quiz kategorisi
+ *         questions:
+ *           type: array
+ *           items:
+ *             type: string
+ *             description: Soru ID'leri
+ *         createdBy:
+ *           type: string
+ *           description: Quizi oluşturan kullanıcının ID'si
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Oluşturulma tarihi
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Son güncelleme tarihi
+ */
+
 const quizSchema = new mongoose.Schema(
   {
     title: {

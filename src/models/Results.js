@@ -1,5 +1,70 @@
 const mongoose = require("mongoose");
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Answer:
+ *       type: object
+ *       required:
+ *         - questionId
+ *         - userAnswer
+ *         - isCorrect
+ *       properties:
+ *         questionId:
+ *           type: string
+ *           description: Soru ID'si
+ *         userAnswer:
+ *           type: object
+ *           description: Kullanıcının verdiği cevap
+ *         isCorrect:
+ *           type: boolean
+ *           description: Cevabın doğru olup olmadığı
+ * 
+ *     Result:
+ *       type: object
+ *       required:
+ *         - student
+ *         - quiz
+ *         - answers
+ *         - score
+ *         - totalQuestions
+ *         - correctAnswers
+ *       properties:
+ *         student:
+ *           type: string
+ *           description: Öğrenci ID'si
+ *         quiz:
+ *           type: string
+ *           description: Quiz ID'si
+ *         answers:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Answer'
+ *           description: Verilen cevaplar
+ *         score:
+ *           type: number
+ *           description: Alınan puan
+ *         totalQuestions:
+ *           type: number
+ *           description: Toplam soru sayısı
+ *         correctAnswers:
+ *           type: number
+ *           description: Doğru cevap sayısı
+ *         completedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Tamamlanma tarihi
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Oluşturulma tarihi
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Son güncelleme tarihi
+ */
+
 const answerSchema = new mongoose.Schema({
   questionId: {
     type: mongoose.Schema.Types.ObjectId,
