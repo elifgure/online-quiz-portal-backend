@@ -44,22 +44,55 @@ const router = express.Router();
  *             type: object
  *             required:
  *               - title
- *               - description
  *               - duration
- *               - passingScore
+ *               - category
+ *               - questions
  *             properties:
  *               title:
  *                 type: string
  *                 description: Quiz başlığı
- *               description:
- *                 type: string
- *                 description: Quiz açıklaması
  *               duration:
  *                 type: number
  *                 description: Quiz süresi (dakika)
- *               passingScore:
- *                 type: number
- *                 description: Geçme notu
+ *               category:
+ *                 type: string
+ *                 description: Quiz kategorisi
+ *               questions:
+ *                 type: array
+ *                 description: Quiz soruları
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - type
+ *                     - questionText
+ *                     - options
+ *                     - correctAnswer
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [multiple-choice, true-false, text]
+ *                       description: Soru tipi
+ *                     questionText:
+ *                       type: string
+ *                       description: Soru metni
+ *                     options:
+ *                       type: array
+ *                       description: Çoktan seçmeli sorular için şıklar
+ *                       items:
+ *                         type: object
+ *                         required:
+ *                           - text
+ *                           - isCorrect
+ *                         properties:
+ *                           text:
+ *                             type: string
+ *                             description: Şık metni
+ *                           isCorrect:
+ *                             type: boolean
+ *                             description: Doğru cevap mı?
+ *                     correctAnswer:
+ *                       type: object
+ *                       description: Soru tipine göre doğru cevap
  *     responses:
  *       201:
  *         description: Quiz başarıyla oluşturuldu

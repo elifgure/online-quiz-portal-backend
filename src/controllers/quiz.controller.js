@@ -70,7 +70,10 @@ const createQuiz = asyncHandler(async (req, res, next) => {
   // Quiz'e soru ID'lerini ekle
   quiz.questions = savedQuestions.map(q => q._id);
   await quiz.save();
-  res.status(201).json(new ApiResponse(201, "Quiz Oluşturuldu", quiz));
+
+  // Quiz'i questions ile populate ederek dön
+  const populatedQuiz = await Quiz.findById(quiz._id).populate('questions');
+  res.status(201).json(new ApiResponse(201, "Quiz Oluşturuldu", populatedQuiz));
 });
 
 // Quiz Güncelleme

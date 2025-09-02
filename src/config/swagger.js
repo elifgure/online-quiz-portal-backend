@@ -6,7 +6,7 @@ const options = {
     info: {
       title: 'Online Quiz Portal API',
       version: '1.0.0',
-      description: 'Online Quiz Portal için RESTful API dokümantasyonu',
+      description: 'Online Quiz Portal için RESTful API dokümantasyonu.\n\n**Authenticate Etmek İçin:**\n1. Önce `/api/auth/register` ile kayıt olun\n2. `/api/auth/login` ile giriş yapıp JWT token alın\n3. Sağ üstteki "Authorize" butonuna tıklayın\n4. Açılan pencerede "Bearer" yazmadan sadece JWT tokenı yapıştırın\n5. "Authorize" butonuna tıklayın',
       contact: {
         name: 'API Desteği',
         url: 'https://github.com/elifgure'
