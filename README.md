@@ -13,7 +13,17 @@
   - Öğrenci bazlı sonuç görüntüleme
   - Quiz bazlı performans analizi
   - Doğru/yanlış cevap istatistikleri
-- 🔒 Güvenlik Önlemleri
+- � Gerçek Zamanlı Bildirimler (Socket.IO)
+  - Yeni quiz oluşturulduğunda öğrencilere bildirim
+  - Quiz tamamlandığında öğretmene bildirim
+  - Online kullanıcı sayısı takibi
+  - Özel mesajlaşma sistemi
+  - Sistem duyuruları
+- 📚 API Dokümantasyonu (Swagger UI)
+  - Tüm endpoint'lerin detaylı dokümantasyonu
+  - Interaktif API test arayüzü
+  - JWT authentication entegrasyonu
+- �🔒 Güvenlik Önlemleri
   - CORS koruması
   - Rate Limiting
   - XSS Koruması
@@ -25,7 +35,7 @@
 - 📝 Detaylı Loglama Sistemi
   - Winston logger entegrasyonu
   - Ortam bazlı log yapılandırması
-  - Hata ve performans takibiortal Backend
+  - Hata ve performans takibi
 
 Bu proje, online quiz portal uygulamasının backend API servisidir. Node.js, Express.js ve MongoDB kullanılarak geliştirilmiştir.
 
@@ -139,7 +149,31 @@ src/
 - `GET /api/results/teacher/:id` - Belirli bir sonucu detaylı görüntüle (Teacher)
 - `GET /api/results` - Tüm sonuçları listele (Admin)
 
-## 🔒 Güvenlik
+## � Gerçek Zamanlı Bildirimler (Socket.IO)
+
+Proje, Socket.IO kullanarak gerçek zamanlı bildirim sistemi içerir:
+
+
+### Bildirim Tipleri
+- **NEW_QUIZ**: Yeni quiz oluşturulduğunda öğrencilere gönderilir
+- **QUIZ_COMPLETED**: Quiz tamamlandığında öğretmene gönderilir
+
+
+
+```
+
+## 📚 API Dokümantasyonu
+
+Swagger UI ile detaylı API dokümantasyonu `/api-docs` endpoint'inde mevcuttur.
+
+### Swagger Kullanımı
+1. Sunucuyu başlatın
+2. `http://localhost:5000/api-docs` adresine gidin
+3. "Authorize" butonuna tıklayın
+4. JWT token'ınızı girin (Bearer yazmadan)
+5. API endpoint'lerini test edin
+
+## �🔒 Güvenlik
 
 Proje aşağıdaki güvenlik önlemlerini içerir:
 

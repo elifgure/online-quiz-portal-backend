@@ -1,5 +1,6 @@
 const Quiz = require("../models/Quizzes");
 const Question = require("../models/Questions");
+const socketService = require("../config/socket");
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const asyncHandler = require("../utils/asyncHandler");
@@ -73,6 +74,10 @@ const createQuiz = asyncHandler(async (req, res, next) => {
 
   // Quiz'i questions ile populate ederek dön
   const populatedQuiz = await Quiz.findById(quiz._id).populate('questions');
+  
+  // Socket.IO ile öğrencilere yeni quiz bildirimi gönder
+  socketService.notifyNewQuiz(populatedQuiz, user);
+  
   res.status(201).json(new ApiResponse(201, "Quiz Oluşturuldu", populatedQuiz));
 });
 

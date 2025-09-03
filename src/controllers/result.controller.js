@@ -1,6 +1,7 @@
 const Result = require("../models/Results");
 const Question = require("../models/Questions");
 const Quiz = require("../models/Quizzes");
+const socketService = require("../config/socket");
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const asyncHandler = require("../utils/asyncHandler");
@@ -60,6 +61,13 @@ const createResult = asyncHandler(async (req, res, next) => {
     totalQuestions,
     correctAnswers: correctAnswersCount,
   });
+
+  // Socket.IO ile öğretmene quiz tamamlandı bildirimi gönder
+  const populatedResult = await Result.findById(result._id)
+    .populate('student', 'name email')
+    .populate('quiz', 'title createdBy');
+  
+  socketService.notifyQuizCompleted(populatedResult, req.user, quiz);
 
   res.status(201).json(new ApiResponse(201, "Sonuçlar", result));
 });
