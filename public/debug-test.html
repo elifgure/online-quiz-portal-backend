@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Socket.IO Debug Test</title>
+    <!-- Socket.IO Client - CDN fallback ile -->
+    <script src="/socket.io/socket.io.js" 
+            onerror="this.onerror=null; this.src='https://cdn.socket.io/4.7.2/socket.io.min.js'"></script>
+</head>
+<body>
+    <h1>Socket.IO Debug Test</h1>
+    
+    <div>
+        <label>JWT Token:</label><br>
+        <textarea id="tokenInput" style="width: 500px; height: 100px;" placeholder="JWT token'ınızı buraya yapıştırın"></textarea><br>
+        <button onclick="testConnection()">Test Bağlantı</button>
+        <button onclick="testTokenAPI()">Test Token (API)</button>
+    </div>
+    
+    <div id="output" style="margin-top: 20px; padding: 10px; background: #f5f5f5; white-space: pre-wrap; font-family: monospace;"></div>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            console.log(message);
+        }
+
+        async function testTokenAPI() {
+            const token = document.getElementById('tokenInput').value.trim();
+            
+            if (!token) {
+                alert('Token girin!');
+                return;
+            }
+
+            log('🧪 API ile token test ediliyor...');
+            
+            try {
+                const response = await fetch('/api/test/socket-status', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const result = await response.json();
+                log(`📡 API Response: ${JSON.stringify(result, null, 2)}`);
+                
+                if (result.success) {
+                    log('✅ Token geçerli! Socket.IO bağlantısı denenebilir.');
+                } else {
+                    log('❌ Token geçersiz!');
+                }
+            } catch (error) {
+                log(`❌ API Hatası: ${error.message}`);
+            }
+        }
+
+        function testConnection() {
+            const token = document.getElementById('tokenInput').value.trim();
+            
+            if (!token) {
+                alert('Token girin!');
+                return;
+            }
+
+            log('🔌 Socket.IO bağlantısı test ediliyor...');
+            log(`🔑 Token (ilk 50 karakter): ${token.substring(0, 50)}...`);
+
+            const socket = io('http://localhost:5000', {
+                auth: {
+                    token: token
+                },
+                transports: ['polling', 'websocket'],
+                forceNew: true,
+                timeout: 15000
+            });
+
+            socket.on('connect', () => {
+                log('✅ BAŞARILI! Socket.IO bağlantısı kuruldu');
+                log(`🆔 Socket ID: ${socket.id}`);
+                log(`🚀 Transport: ${socket.io.engine.transport.name}`);
+                
+                // Test bildirimi gönder
+                socket.emit('test_message', { message: 'Merhaba Socket.IO!' });
+            });
+
+            socket.on('connect_error', (error) => {
+                log(`❌ BAĞLANTI HATASI: ${error.message}`);
+                log(`❌ Error Type: ${error.type || 'Unknown'}`);
+                log(`❌ Error Description: ${error.description || 'No description'}`);
+            });
+
+            socket.on('disconnect', (reason) => {
+                log(`⚠️ Bağlantı kesildi: ${reason}`);
+            });
+
+            socket.on('notification', (data) => {
+                log(`📨 Bildirim alındı: ${JSON.stringify(data)}`);
+            });
+
+            // 10 saniye sonra bağlantıyı kapat
+            setTimeout(() => {
+                socket.disconnect();
+                log('🔌 Test bağlantısı kapatıldı');
+            }, 10000);
+        }
+    </script>
+</body>
+</html>
