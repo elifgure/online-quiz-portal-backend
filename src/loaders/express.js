@@ -1,7 +1,6 @@
 // express app setup
 const express = require("express");
 const morgan = require("morgan");
-const path = require("path");
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('../config/swagger');
 const applySecurity = require("../middlewares/security");
@@ -13,7 +12,6 @@ const userRoutes = require("../routes/user.routes");
 const questionRoutes = require("../routes/question.routes");
 const quizRoutes = require("../routes/quiz.routes");
 const resultRoutes = require("../routes/result.routes");
-const testRoutes = require("../routes/test.routes");
 
 function expressLoader() {
   const app = express();
@@ -29,9 +27,6 @@ function expressLoader() {
   if (process.env.NODE_ENV === "development") {
     app.use(morgan("dev"));
   }
-
-  // Static files
-  app.use(express.static(path.join(__dirname, '../../public')));
   // Health check
   app.get("/health", (req, res) => {
     res.status(200).json({
@@ -66,7 +61,6 @@ function expressLoader() {
   app.use("/api/questions", questionRoutes);
   app.use("/api/quizzes", quizRoutes);
   app.use("/api/results", resultRoutes);
-  app.use("/api/test", testRoutes);
 
   //404 Handler
   app.use(notFound);

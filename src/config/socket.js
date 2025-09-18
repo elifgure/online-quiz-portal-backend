@@ -19,7 +19,7 @@ class SocketService {
       },
       transports: ['websocket', 'polling'], // Her iki transport'u da destekle
       allowEIO3: true, // Eski socket.io versiyonları için uyumluluk
-      serveClient: true, // Client dosyalarını serve et - 
+      serveClient: false, // Client dosyalarını serve etme
       pingTimeout: 60000,
       pingInterval: 25000,
     });
@@ -188,53 +188,6 @@ class SocketService {
   // Online Kullanıcı sayısı
   broadcastOnlineUsers() {
     this.io.emit("online_users_count", { count: this.connectedUsers.size });
-  }
-
-  // Belirli bir role notification gönder
-  sendNotificationToRole(role, notificationData) {
-    try {
-      console.log(`📢 Sending notification to role: ${role}`, notificationData);
-      this.io.to(role).emit("notification", notificationData);
-      return {
-        success: true,
-        message: `Notification sent to ${role} role`,
-        data: notificationData
-      };
-    } catch (error) {
-      console.error('❌ Error sending notification to role:', error);
-      throw error;
-    }
-  }
-
-  // Belirli bir kullanıcıya notification gönder
-  sendNotificationToUser(userId, notificationData) {
-    try {
-      const socketId = this.connectedUsers.get(userId);
-      if (socketId) {
-        console.log(`📢 Sending notification to user: ${userId}`, notificationData);
-        this.io.to(socketId).emit("notification", notificationData);
-        return {
-          success: true,
-          message: `Notification sent to user ${userId}`,
-          data: notificationData
-        };
-      } else {
-        console.log(`⚠️ User ${userId} is not connected`);
-        return {
-          success: false,
-          message: `User ${userId} is not connected`,
-          data: notificationData
-        };
-      }
-    } catch (error) {
-      console.error('❌ Error sending notification to user:', error);
-      throw error;
-    }
-  }
-
-  // IO instance'ı dış kullanım için
-  getIO() {
-    return this.io;
   }
   // Öğretmen quiz oluşturduğunda → tüm öğrencilere
   notifyNewQuiz(quiz, createdBy) {

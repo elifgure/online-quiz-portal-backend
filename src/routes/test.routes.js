@@ -61,27 +61,6 @@ router.get('/socket-status', authenticate, (req, res) => {
     }
 });
 
-// Test için manuel connection simülasyonu
-router.post('/simulate-connection', authenticate, (req, res) => {
-    try {
-        const io = socketService.getIO();
-        const { userId = req.user.id, role = req.user.role } = req.body;
-        
-        // Simüle edilmiş bağlantı bilgisi
-        const connectionInfo = {
-            userId,
-            role,
-            timestamp: new Date(),
-            socketNamespace: '/',
-            availableEvents: ['notification', 'quiz_created', 'quiz_completed', 'connect', 'disconnect']
-        };
-
-        res.status(200).json(new ApiResponse(200, connectionInfo, 'Connection simülasyonu'));
-    } catch (error) {
-        throw new ApiError(500, `Connection simülasyonu başarısız: ${error.message}`);
-    }
-});
-
 // Connected clients listesi
 router.get('/connected-clients', authenticate, (req, res) => {
     try {
