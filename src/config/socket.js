@@ -19,7 +19,7 @@ class SocketService {
       },
       transports: ['websocket', 'polling'], // Her iki transport'u da destekle
       allowEIO3: true, // Eski socket.io versiyonları için uyumluluk
-      serveClient: false, // Client dosyalarını serve etme
+      serveClient: true, // Client dosyalarını serve et - ÖNEMLİ!
       pingTimeout: 60000,
       pingInterval: 25000,
     });

@@ -18,6 +18,28 @@ const options = {
         description: 'Development server',
       },
     ],
+    tags: [
+      {
+        name: 'Auth',
+        description: 'Kimlik doğrulama ve yetkilendirme'
+      },
+      {
+        name: 'Users',
+        description: 'Kullanıcı yönetimi'
+      },
+      {
+        name: 'Questions',
+        description: 'Soru yönetimi'
+      },
+      {
+        name: 'Quizzes',
+        description: 'Quiz yönetimi'
+      },
+      {
+        name: 'Results',
+        description: 'Sonuç yönetimi'
+      }
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {

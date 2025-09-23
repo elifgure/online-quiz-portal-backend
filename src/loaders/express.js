@@ -1,6 +1,7 @@
 // express app setup
 const express = require("express");
 const morgan = require("morgan");
+const path = require("path");
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('../config/swagger');
 const applySecurity = require("../middlewares/security");
@@ -27,6 +28,9 @@ function expressLoader() {
   if (process.env.NODE_ENV === "development") {
     app.use(morgan("dev"));
   }
+
+  // Static files
+  app.use(express.static(path.join(__dirname, '../../public')));
   // Health check
   app.get("/health", (req, res) => {
     res.status(200).json({

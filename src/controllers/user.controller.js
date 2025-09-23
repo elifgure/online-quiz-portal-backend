@@ -66,8 +66,16 @@ const updateRole = asyncHandler(async (req, res, next) => {
     .status(200)
     .json(new ApiResponse(200, "Kullanıcı Rolü Güncellendi", user));
 });
+// Kullanıcı silme işlemi (Admin)
+const deleteUser = asyncHandler(async (req, res, next)=>{
+  const {id} = req.params
+  const user = await User.findByIdAndDelete(id)
+  if(!user) return next(new ApiError(404, "Kullanıcı Bulunamadı"))
+    res .status(200).json(new ApiResponse(200, "Kullanıcı Silindi", null))
+})
 module.exports = {
   getProfile,
   getAllUsers,
   updateRole,
+  deleteUser
 };

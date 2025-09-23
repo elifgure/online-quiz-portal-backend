@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Test Panel - Quiz Portal</title>
+    <!-- Socket.IO Client -->
+    <script src="/socket.io/socket.io.js" 
+            onerror="this.onerror=null; this.src='https://cdn.socket.io/4.7.2/socket.io.min.js'"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .panel {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .panel h2 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        
+        .status-connected { background-color: #10b981; }
+        .status-connecting { background-color: #f59e0b; animation: pulse 1s infinite; }
+        .status-disconnected { background-color: #ef4444; }
+        .status-error { background-color: #dc2626; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+        
+        .input-group input, .input-group textarea, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        .logs {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 15px;
+        }
+        
+        .notifications {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+        .notification {
+            background: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .notification.error {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        
+        .notification-time {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        
+        .connection-info {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #1e40af;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .test-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔌 Socket.IO Test Panel</h1>
+            <p>Quiz Portal Real-Time Communication Test</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- Bağlantı Paneli -->
+            <div class="panel">
+                <h2>🔐 Bağlantı Kontrolü 
+                    <span id="connectionStatus" class="status-indicator status-disconnected"></span>
+                </h2>
+                
+                <div class="input-group">
+                    <label for="serverUrl">Server URL:</label>
+                    <input type="text" id="serverUrl" value="http://localhost:5000" />
+                </div>
+                
+                <div class="input-group">
+                    <label for="jwtToken">JWT Token:</label>
+                    <textarea id="jwtToken" rows="3" placeholder="JWT token'ınızı buraya yapıştırın"></textarea>
+                </div>
+                
+                <div class="test-buttons">
+                    <button class="btn" onclick="connectSocket()">🔌 Bağlan</button>
+                    <button class="btn btn-danger" onclick="disconnectSocket()">❌ Bağlantıyı Kes</button>
+                    <button class="btn btn-success" onclick="testTokenAPI()">🧪 Token Test</button>
+                </div>
+                
+                <div class="connection-info" id="connectionInfo" style="display: none;">
+                    <div class="info-row">
+                        <span class="info-label">Socket ID:</span>
+                        <span id="socketId">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Transport:</span>
+                        <span id="transport">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Kullanıcı:</span>
+                        <span id="userInfo">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Ping:</span>
+                        <span id="pingInfo">-</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Test Paneli -->
+            <div class="panel">
+                <h2>🧪 Test İşlemleri</h2>
+                
+                <div class="input-group">
+                    <label for="testMessage">Test Mesajı:</label>
+                    <input type="text" id="testMessage" value="Merhaba Socket.IO!" />
+                </div>
+                
+                <div class="input-group">
+                    <label for="notificationType">Bildirim Tipi:</label>
+                    <select id="notificationType">
+                        <option value="quiz_created">Quiz Oluşturuldu</option>
+                        <option value="quiz_completed">Quiz Tamamlandı</option>
+                        <option value="general">Genel Bildirim</option>
+                        <option value="test">Test Bildirimi</option>
+                    </select>
+                </div>
+                
+                <div class="test-buttons">
+                    <button class="btn" onclick="sendTestNotification()">📤 Bildirim Gönder</button>
+                    <button class="btn" onclick="pingServer()">🏓 Ping Gönder</button>
+                    <button class="btn" onclick="getUserInfo()">👤 Kullanıcı Bilgisi</button>
+                    <button class="btn" onclick="testServerHealth()">❤️ Server Health</button>
+                </div>
+            </div>
+            
+            <!-- Bildirimler -->
+            <div class="panel">
+                <h2>📨 Gelen Bildirimler</h2>
+                <div class="notifications" id="notifications">
+                    <p style="color: #6b7280; font-style: italic; text-align: center; padding: 20px;">
+                        Henüz bildirim yok...
+                    </p>
+                </div>
+                <button class="btn btn-danger" onclick="clearNotifications()">🗑️ Bildirimleri Temizle</button>
+            </div>
+            
+            <!-- Loglar -->
+            <div class="panel">
+                <h2>📋 Sistem Logları</h2>
+                <div class="logs" id="logs"></div>
+                <button class="btn btn-danger" onclick="clearLogs()">🗑️ Logları Temizle</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        let pingInterval = null;
+        
+        // Utility functions
+        function log(message, type = 'info') {
+            const logsEl = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString('tr-TR');
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            
+            logsEl.textContent += `[${timestamp}] ${icon} ${message}\n`;
+            logsEl.scrollTop = logsEl.scrollHeight;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+        
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connectionStatus');
+            const infoEl = document.getElementById('connectionInfo');
+            
+            statusEl.className = `status-indicator status-${status}`;
+            
+            if (status === 'connected') {
+                infoEl.style.display = 'block';
+                startPingMonitoring();
+            } else {
+                infoEl.style.display = 'none';
+                stopPingMonitoring();
+            }
+        }
+        
+        function addNotification(data, isError = false) {
+            const notificationsEl = document.getElementById('notifications');
+            
+            // İlk bildirim ise placeholder'ı temizle
+            if (notificationsEl.innerHTML.includes('Henüz bildirim yok')) {
+                notificationsEl.innerHTML = '';
+            }
+            
+            const notificationEl = document.createElement('div');
+            notificationEl.className = `notification ${isError ? 'error' : ''}`;
+            
+            const timestamp = new Date().toLocaleTimeString('tr-TR');
+            
+            notificationEl.innerHTML = `
+                <div><strong>${isError ? '❌' : '📨'} ${data.type || 'Bildirim'}</strong></div>
+                <div>${data.message || JSON.stringify(data)}</div>
+                <div class="notification-time">${timestamp}</div>
+                ${data.quiz ? `<div><em>Quiz: ${data.quiz.title}</em></div>` : ''}
+            `;
+            
+            notificationsEl.insertBefore(notificationEl, notificationsEl.firstChild);
+            
+            // En fazla 10 bildirim göster
+            while (notificationsEl.children.length > 10) {
+                notificationsEl.removeChild(notificationsEl.lastChild);
+            }
+        }
+        
+        function startPingMonitoring() {
+            if (pingInterval) clearInterval(pingInterval);
+            
+            pingInterval = setInterval(() => {
+                if (socket && socket.connected) {
+                    const start = Date.now();
+                    socket.emit('ping', start);
+                }
+            }, 5000);
+        }
+        
+        function stopPingMonitoring() {
+            if (pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
+            }
+            document.getElementById('pingInfo').textContent = '-';
+        }
+        
+        // Socket.IO functions
+        async function connectSocket() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const token = document.getElementById('jwtToken').value.trim();
+            
+            if (!token) {
+                alert('JWT token gerekli!');
+                return;
+            }
+            
+            log('Socket.IO bağlantısı başlatılıyor...');
+            updateConnectionStatus('connecting');
+            
+            // Mevcut bağlantıyı kapat
+            if (socket) {
+                socket.disconnect();
+            }
+            
+            try {
+                socket = io(serverUrl, {
+                    auth: { token: token },
+                    transports: ['polling', 'websocket'],
+                    forceNew: true,
+                    timeout: 10000
+                });
+                
+                // Event listeners
+                socket.on('connect', () => {
+                    log('Socket.IO bağlantısı başarılı!', 'success');
+                    updateConnectionStatus('connected');
+                    
+                    document.getElementById('socketId').textContent = socket.id;
+                    document.getElementById('transport').textContent = socket.io.engine.transport.name;
+                    
+                    // Kullanıcı bilgilerini al
+                    getUserInfo();
+                });
+                
+                socket.on('disconnect', (reason) => {
+                    log(`Bağlantı kesildi: ${reason}`, 'warning');
+                    updateConnectionStatus('disconnected');
+                    
+                    document.getElementById('socketId').textContent = '-';
+                    document.getElementById('transport').textContent = '-';
+                    document.getElementById('userInfo').textContent = '-';
+                });
+                
+                socket.on('connect_error', (error) => {
+                    log(`Bağlantı hatası: ${error.message}`, 'error');
+                    updateConnectionStatus('error');
+                    addNotification({ type: 'Connection Error', message: error.message }, true);
+                });
+                
+                socket.on('notification', (data) => {
+                    log(`Bildirim alındı: ${JSON.stringify(data)}`);
+                    addNotification(data);
+                });
+                
+                socket.on('pong', (startTime) => {
+                    const ping = Date.now() - startTime;
+                    document.getElementById('pingInfo').textContent = `${ping}ms`;
+                });
+                
+                socket.on('user_info', (data) => {
+                    document.getElementById('userInfo').textContent = `${data.name} (${data.role})`;
+                    log(`Kullanıcı: ${data.name} (${data.role})`);
+                });
+                
+                // Transport upgrade
+                socket.io.on('upgrade', () => {
+                    const newTransport = socket.io.engine.transport.name;
+                    document.getElementById('transport').textContent = newTransport;
+                    log(`Transport upgrade: ${newTransport}`, 'success');
+                });
+                
+            } catch (error) {
+                log(`Bağlantı hatası: ${error.message}`, 'error');
+                updateConnectionStatus('error');
+            }
+        }
+        
+        function disconnectSocket() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                log('Bağlantı manuel olarak kapatıldı', 'warning');
+            }
+        }
+        
+        // Test functions
+        async function testTokenAPI() {
+            const token = document.getElementById('jwtToken').value.trim();
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            
+            if (!token) {
+                alert('Token gerekli!');
+                return;
+            }
+            
+            log('Token API ile test ediliyor...');
+            
+            try {
+                const response = await fetch(`${serverUrl}/api/test/socket-status`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('Token geçerli! ✅', 'success');
+                    addNotification({ type: 'Token Test', message: 'Token geçerli' });
+                } else {
+                    log('Token geçersiz! ❌', 'error');
+                    addNotification({ type: 'Token Test', message: 'Token geçersiz' }, true);
+                }
+            } catch (error) {
+                log(`Token test hatası: ${error.message}`, 'error');
+                addNotification({ type: 'Token Test Error', message: error.message }, true);
+            }
+        }
+        
+        async function sendTestNotification() {
+            const token = document.getElementById('jwtToken').value.trim();
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const message = document.getElementById('testMessage').value;
+            const type = document.getElementById('notificationType').value;
+            
+            if (!token) {
+                alert('Token gerekli!');
+                return;
+            }
+            
+            log('Test bildirimi gönderiliyor...');
+            
+            try {
+                const response = await fetch(`${serverUrl}/api/test/send-notification`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ message, type })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('Test bildirimi gönderildi! ✅', 'success');
+                } else {
+                    log(`Bildirim hatası: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                log(`Bildirim gönderim hatası: ${error.message}`, 'error');
+            }
+        }
+        
+        function pingServer() {
+            if (socket && socket.connected) {
+                const start = Date.now();
+                socket.emit('ping', start);
+                log('Ping gönderildi');
+            } else {
+                alert('Önce bağlanın!');
+            }
+        }
+        
+        function getUserInfo() {
+            if (socket && socket.connected) {
+                socket.emit('get_user_info');
+                log('Kullanıcı bilgisi istendi');
+            } else {
+                alert('Önce bağlanın!');
+            }
+        }
+        
+        async function testServerHealth() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            
+            log('Server health kontrol ediliyor...');
+            
+            try {
+                const response = await fetch(`${serverUrl}/health`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('Server sağlıklı! ✅', 'success');
+                    addNotification({ type: 'Health Check', message: 'Server çalışıyor' });
+                } else {
+                    log('Server sorunu! ❌', 'error');
+                }
+            } catch (error) {
+                log(`Health check hatası: ${error.message}`, 'error');
+                addNotification({ type: 'Health Check Error', message: error.message }, true);
+            }
+        }
+        
+        // UI functions
+        function clearNotifications() {
+            const notificationsEl = document.getElementById('notifications');
+            notificationsEl.innerHTML = '<p style="color: #6b7280; font-style: italic; text-align: center; padding: 20px;">Henüz bildirim yok...</p>';
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').textContent = '';
+        }
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            log('Socket.IO Test Panel yüklendi');
+            
+            // LocalStorage'dan token'ı yükle
+            const savedToken = localStorage.getItem('jwt_token');
+            if (savedToken) {
+                document.getElementById('jwtToken').value = savedToken;
+                log('Token localStorage\'dan yüklendi');
+            }
+            
+            // Token değişikliklerini kaydet
+            document.getElementById('jwtToken').addEventListener('input', (e) => {
+                localStorage.setItem('jwt_token', e.target.value);
+            });
+            
+            // Socket.IO kütüphanesini kontrol et
+            setTimeout(() => {
+                if (typeof io === 'undefined') {
+                    log('HATA: Socket.IO kütüphanesi yüklenemedi!', 'error');
+                    log('CDN\'den yüklemeyi deniyorum...', 'warning');
+                    
+                    // Manuel CDN yükleme
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
+                    script.onload = () => {
+                        log('Socket.IO kütüphanesi CDN\'den yüklendi ✅', 'success');
+                    };
+                    script.onerror = () => {
+                        log('CDN\'den de yüklenemedi! İnternet bağlantınızı kontrol edin.', 'error');
+                        addNotification({ 
+                            type: 'Critical Error', 
+                            message: 'Socket.IO kütüphanesi hiçbir kaynaktan yüklenemedi!' 
+                        }, true);
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    log('Socket.IO kütüphanesi yüklendi ✅', 'success');
+                }
+            }, 1000); // 1 saniye bekle
+        });
+        
+        // Sayfa kapanırken bağlantıyı kapat
+        window.addEventListener('beforeunload', () => {
+            if (socket) {
+                socket.disconnect();
+            }
+        });
+    </script>
+</body>
+</html>
