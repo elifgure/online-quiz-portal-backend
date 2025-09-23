@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Socket.IO Test Panel - Quiz Portal</title>
     <!-- Socket.IO Client -->
-    <script src="/socket.io/socket.io.js" 
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" 
             onerror="this.onerror=null; this.src='https://cdn.socket.io/4.7.2/socket.io.min.js'"></script>
     <style>
         * {
@@ -277,9 +277,7 @@
                 
                 <div class="test-buttons">
                     <button class="btn" onclick="sendTestNotification()">📤 Bildirim Gönder</button>
-                    <button class="btn" onclick="pingServer()">🏓 Ping Gönder</button>
                     <button class="btn" onclick="getUserInfo()">👤 Kullanıcı Bilgisi</button>
-                    <button class="btn" onclick="testServerHealth()">❤️ Server Health</button>
                 </div>
             </div>
             

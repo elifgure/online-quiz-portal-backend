@@ -20,4 +20,21 @@ const quizValidators = [
     .isArray({ min: 1 })
     .withMessage("Quiz için en az 1 soru eklenmeli"),
 ];
+
+const solveQuizValidators = [
+  body("answers")
+    .isArray({ min: 1 })
+    .withMessage("En az 1 cevap gerekli"),
+  body("answers.*.questionId")
+    .notEmpty()
+    .withMessage("Soru ID gerekli")
+    .isMongoId()
+    .withMessage("Geçerli bir soru ID giriniz"),
+  body("answers.*.answer")
+    .notEmpty()
+    .withMessage("Cevap gerekli")
+    .isString()
+    .withMessage("Cevap string olmalı"),
+];
+
 module.exports = { quizValidators };

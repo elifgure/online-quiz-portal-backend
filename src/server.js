@@ -14,6 +14,12 @@ const server = http.createServer(app)
 
 // Socket.IO'yu başlat
 const io = socketService.init(server)
+io.on('get_user_info', () => {
+  io.emit('user_info', {
+    name: socket.userName,
+    role: socket.userRole
+  });
+});
 
 // Socket.IO error handling
 io.engine.on("connection_error", (err) => {

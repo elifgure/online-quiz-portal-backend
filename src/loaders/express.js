@@ -2,8 +2,8 @@
 const express = require("express");
 const morgan = require("morgan");
 const path = require("path");
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('../config/swagger');
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("../config/swagger");
 const applySecurity = require("../middlewares/security");
 const { notFound, errorHandler } = require("../middlewares/error");
 
@@ -13,6 +13,7 @@ const userRoutes = require("../routes/user.routes");
 const questionRoutes = require("../routes/question.routes");
 const quizRoutes = require("../routes/quiz.routes");
 const resultRoutes = require("../routes/result.routes");
+const testRoutes = require("../routes/test.routes");
 
 function expressLoader() {
   const app = express();
@@ -30,7 +31,7 @@ function expressLoader() {
   }
 
   // Static files
-  app.use(express.static(path.join(__dirname, '../../public')));
+  app.use(express.static(path.join(__dirname, "../../public")));
   // Health check
   app.get("/health", (req, res) => {
     res.status(200).json({
@@ -39,7 +40,7 @@ function expressLoader() {
       timestamp: new Date().toISOString(),
     });
   });
-
+app.use("/api/test", testRoutes);
   // Socket.IO test endpoint
   app.get("/socket-test", (req, res) => {
     const port = process.env.PORT || 5000;
@@ -50,22 +51,22 @@ function expressLoader() {
         step1: `GET http://localhost:${port}/socket.io/?EIO=4&transport=polling&token=YOUR_JWT_TOKEN`,
         step2: "Copy the sid from response",
         step3: `POST http://localhost:${port}/socket.io/?EIO=4&transport=polling&sid=COPIED_SID`,
-        step4: "Body: 42[\"ping\"]",
-        step5: `GET http://localhost:${port}/socket.io/?EIO=4&transport=polling&sid=COPIED_SID (to receive messages)`
-      }
+        step4: 'Body: 42["ping"]',
+        step5: `GET http://localhost:${port}/socket.io/?EIO=4&transport=polling&sid=COPIED_SID (to receive messages)`,
+      },
     });
   });
 
   // Swagger Documentation
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
   // API Routes
   app.use("/api/auth", authRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/questions", questionRoutes);
   app.use("/api/quizzes", quizRoutes);
   app.use("/api/results", resultRoutes);
-
+  
   //404 Handler
   app.use(notFound);
 
@@ -75,4 +76,4 @@ function expressLoader() {
   return app;
 }
 
-module.exports = expressLoader
+module.exports = expressLoader;

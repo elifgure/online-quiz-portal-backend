@@ -52,6 +52,7 @@ class SocketService {
         // Token'ı farklı yerlerden alma denemesi
         const token =
           socket.handshake.auth.token ||
+           console.log("🔑 Gelen token:", token)
           socket.handshake.headers.authorization?.replace("Bearer ", "") ||
           socket.handshake.query.token ||
           socket.handshake.headers.token;
@@ -62,7 +63,7 @@ class SocketService {
           console.log('❌ No token provided in auth middleware');
           return next(new Error("No authentication token provided"));
         }
-
+console.log("🛡️ JWT_SECRET (verify):", process.env.JWT_SECRET);
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         console.log('🔐 JWT decoded successfully:', { id: decoded.id, role: decoded.role });
         
@@ -110,6 +111,8 @@ class SocketService {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+         console.log("✅ Gelen token:", token);
+  console.log("✅ Decode sonucu:", decoded);
         const user = await User.findById(decoded.id).select("-password");
         
         if (!user) {
@@ -185,6 +188,15 @@ class SocketService {
     });
     return this.io;
   }
+
+  // Socket.IO instance'ını döndürür
+  getIO() {
+    if (!this.io) {
+      throw new Error('Socket.IO henüz başlatılmadı. Önce init() methodunu çağırın.');
+    }
+    return this.io;
+  }
+
   // Online Kullanıcı sayısı
   broadcastOnlineUsers() {
     this.io.emit("online_users_count", { count: this.connectedUsers.size });
@@ -208,34 +220,35 @@ class SocketService {
     this.io.to("student").emit("notification", notification);
   }
   //  Öğrenci quiz bitirdiğinde → sadece ilgili öğretmene
-  notifyQuizCompleted(result, student, quiz) {
+  notifyQuizCompleted(result, student, teacher) {
     const notification = {
-      type: "QUIZ_COMPLETED",
+      type: "quiz_completed",
       title: "Quiz Tamamlandı!",
-      message: `${student.name} "${quiz.title}" quizi tamamladı. Puan: ${result.score}/${result.totalQuestions}`,
+      message: `${student.name} quiz tamamladı. Puan: ${result.score}%`,
       result: {
         score: result.score,
         totalQuestions: result.totalQuestions,
         correctAnswers: result.correctAnswers,
-        percentage: (
-          (result.correctAnswers / result.totalQuestions) *
-          100
-        ).toFixed(2),
+        percentage: `${result.score}%`,
       },
       student: {
         name: student.name,
         email: student.email,
       },
       quiz: {
-        id: quiz._id,
-        title: quiz.title,
+        id: result.quiz._id,
+        title: result.quiz.title,
       },
       timestamp: new Date(),
     };
+    
     // Sadece quiz'i oluşturan öğretmene gönder
-    const creatorSocketId = this.connectedUsers.get(quiz.createdBy.toString());
-    if (creatorSocketId) {
-      this.io.to(creatorSocketId).emit("notification", notification);
+    const teacherSocketId = this.connectedUsers.get(teacher._id.toString());
+    if (teacherSocketId) {
+      this.io.to(teacherSocketId).emit("notification", notification);
+      console.log(`📨 Quiz completion notification sent to teacher: ${teacher.name}`);
+    } else {
+      console.log(`⚠️ Teacher ${teacher.name} not connected to receive notification`);
     }
   }
 }

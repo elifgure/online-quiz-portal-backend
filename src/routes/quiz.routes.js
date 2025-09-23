@@ -4,6 +4,8 @@ const {
   createQuiz,
   updateQuiz,
   deleteQuiz,
+  startQuiz,
+  getQuizForStudent
 } = require("../controllers/quiz.controller");
 const { authenticate, authorize } = require("../middlewares/auth");
 const validate = require("../middlewares/validate");
@@ -103,7 +105,57 @@ const router = express.Router();
  *       403:
  *         description: Yetkisiz erişim
  * 
- * /api/quizzes/{id}:
+  * /api/quizzes/{id}:
+ *   get:
+ *     summary: Quiz düzenleme verilerini getir (edit için)
+ *     tags: [Quizzes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Quiz ID
+ *     responses:
+ *       200:
+ *         description: Quiz düzenleme verileri başarıyla getirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 title:
+ *                   type: string
+ *                 category:
+ *                   type: string
+ *                 duration:
+ *                   type: number
+ *                 questions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       questionText:
+ *                         type: string
+ *                       type:
+ *                         type: string
+ *                       options:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                       correctAnswer:
+ *                         oneOf:
+ *                           - type: array
+ *                             items:
+ *                               type: string
+ *                           - type: boolean
+ *                           - type: string
  *   put:
  *     summary: Quiz güncelle
  *     tags: [Quizzes]
@@ -125,12 +177,43 @@ const router = express.Router();
  *             properties:
  *               title:
  *                 type: string
- *               description:
+ *               category:
  *                 type: string
  *               duration:
  *                 type: number
- *               passingScore:
- *                 type: number
+ *               questions:
+ *                 type: array
+ *                 description: Quiz soruları
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - type
+ *                     - questionText
+ *                     - correctAnswer
+ *                   properties:
+ *                     operation:
+ *                       type: string
+ *                       enum: [add, update, delete]
+ *                       description: Soru işlemi
+ *                     _id:
+ *                       type: string
+ *                       description: Mevcut soru ID (update/delete için)
+ *                     type:
+ *                       type: string
+ *                       enum: [multiple-choice, true-false, text]
+ *                     questionText:
+ *                       type: string
+ *                     options:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     correctAnswer:
+ *                       oneOf:
+ *                         - type: array
+ *                           items:
+ *                             type: string
+ *                         - type: boolean
+ *                         - type: string
  *     responses:
  *       200:
  *         description: Quiz başarıyla güncellendi
@@ -176,6 +259,7 @@ router.post(
   validate,
   createQuiz
 );
+router.get("/:id", authenticate, authorize("teacher", "admin"), updateQuiz);
 router.put(
   "/:id",
   authenticate,
@@ -185,5 +269,99 @@ router.put(
   updateQuiz
 );
 router.delete("/:id", authenticate, authorize("teacher", "admin"), deleteQuiz);
+
+
+/**
+ * @swagger
+ * /api/quizzes/{id}/start:
+ *   post:
+ *     summary: Quiz başlat (Öğrenci için) - Quiz detayları ve session bilgisi
+ *     tags: [Quizzes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Quiz ID
+ *     responses:
+ *       200:
+ *         description: Quiz başarıyla başlatıldı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Quiz başlatıldı"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     quiz:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         title:
+ *                           type: string
+ *                         duration:
+ *                           type: integer
+ *                         category:
+ *                           type: string
+ *                         questions:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                               questionText:
+ *                                 type: string
+ *                               type:
+ *                                 type: string
+ *                               options:
+ *                                 type: array
+ *                                 items:
+ *                                   type: object
+ *                     session:
+ *                       type: object
+ *                       properties:
+ *                         quizId:
+ *                           type: string
+ *                         startTime:
+ *                           type: string
+ *                           format: date-time
+ *                         duration:
+ *                           type: integer
+ *                         endTime:
+ *                           type: string
+ *                           format: date-time
+ *                     instructions:
+ *                       type: object
+ *                       properties:
+ *                         totalQuestions:
+ *                           type: integer
+ *                         duration:
+ *                           type: string
+ *                         submitEndpoint:
+ *                           type: string
+ *                         submitFormat:
+ *                           type: object
+ *       400:
+ *         description: Bu quiz'i daha önce çözdünüz
+ *       403:
+ *         description: Sadece öğrenciler erişebilir
+ *       404:
+ *         description: Quiz bulunamadı
+ */
+router.post("/:id/start", authenticate, authorize("student"), startQuiz);
+
+
 
 module.exports = router;

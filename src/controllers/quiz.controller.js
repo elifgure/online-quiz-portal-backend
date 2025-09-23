@@ -1,5 +1,6 @@
 const Quiz = require("../models/Quizzes");
 const Question = require("../models/Questions");
+const Result = require("../models/Results");
 const socketService = require("../config/socket");
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
@@ -40,6 +41,7 @@ const getQuizzes = asyncHandler(async (req, res, next) => {
   }
   res.status(200).json(new ApiResponse(200, "Quizler Listelendi", quizzes));
 });
+
 
 // Quiz Oluşturma
 const createQuiz = asyncHandler(async (req, res, next) => {
@@ -85,22 +87,44 @@ const createQuiz = asyncHandler(async (req, res, next) => {
 const updateQuiz = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const user = req.user;
-  const { title, duration, category, questions } = req.body;
-
+  
   // Quiz'i bul ve yetki kontrolü yap
-  const quiz = await Quiz.findById(id);
+  const quiz = await Quiz.findById(id).populate({
+    path: "questions",
+    select: "questionText type options correctAnswer"
+  })
   if (!quiz) return next(new ApiError(404, "Quiz bulunamadı"));
   
   // Sadece quiz sahibi teacher veya admin güncelleyebilir
   if (user.role === "teacher" && !quiz.createdBy.equals(user._id)) {
     return next(new ApiError(403, "Bu quiz'i güncelleme yetkiniz yok"));
   }
-
-  // Temel bilgileri güncelle
+  // GET ise → düzenleme için verileri döndür
+  if(req.method === "GET"){
+    const editableQuiz = {
+      _id:quiz._id,
+      title: quiz.title,
+      category: quiz.category,
+      duration: quiz.duration,
+      questions: quiz.questions.map(q => ({
+         _id: q._id,
+        questionText: q.questionText,
+        type: q.type,
+        options: q.options || [],
+        correctAnswer: q.correctAnswer,
+      }))
+    }
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Quiz düzenleme verileri getirildi", editableQuiz));
+  }
+// PUT ise güncelleme yap
+if(req.method === "PUT"){
+  const { title, duration, category, questions } = req.body;
+   // Temel bilgileri güncelle
   if (title) quiz.title = title;
   if (duration) quiz.duration = duration;
   if (category) quiz.category = category;
-
   // Soru işlemleri varsa
   if (questions && Array.isArray(questions)) {
     // Mevcut soruları tut
@@ -142,13 +166,14 @@ const updateQuiz = asyncHandler(async (req, res, next) => {
     // Quiz'in soru listesini güncelle
     quiz.questions = currentQuestions;
   }
-  await quiz.save();
-  // Güncel quiz'i döndür
+   await quiz.save();
+     // Güncel quiz'i döndür
   const updatedQuiz = await Quiz.findById(id)
     .populate('questions')
     .populate('createdBy', 'name email');
 
   res.status(200).json(new ApiResponse(200, "Quiz Güncellendi", updatedQuiz));
+}
 });
 // Quiz Silme İşlemi
 const deleteQuiz= asyncHandler(async (req, res, next)=>{
@@ -167,9 +192,75 @@ const deleteQuiz= asyncHandler(async (req, res, next)=>{
     .json(new ApiResponse(200, "Quiz ve ilişkili sorular başarıyla silindi"));
 })
 
+// Quiz Başlat (Öğrenci için)
+const startQuiz = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const user = req.user;
+
+  // Sadece öğrenciler erişebilir
+  if (user.role !== "student") {
+    return next(new ApiError(403, "Bu endpoint sadece öğrenciler için"));
+  }
+
+  // Quiz'i bul
+  const quiz = await Quiz.findById(id).populate({
+    path: 'questions',
+    select: 'questionText type options' // Doğru cevabı gizle
+  }).populate('createdBy', 'name');
+// Öğrenciler için correctAnswer'ı gizle
+if(user.role === 'student'){
+  quiz.questions.forEach(q => delete q.correctAnswer);
+}
+  if (!quiz) {
+    return next(new ApiError(404, "Quiz bulunamadı"));
+  }
+
+  // Daha önce çözüp çözmediğini kontrol et
+  const existingResult = await Result.findOne({
+    student: user._id,
+    quiz: quiz._id
+  });
+
+  if (existingResult) {
+    return next(new ApiError(400, "Bu quiz'i daha önce çözdünüz"));
+  }
+
+  // Quiz session bilgisi oluştur (opsiyonel)
+  const quizSession = {
+    quizId: quiz._id,
+    startTime: new Date(),
+    duration: quiz.duration,
+    endTime: new Date(Date.now() + (quiz.duration * 60 * 1000)) // Dakika -> ms
+  };
+
+  const response = {
+    quiz: quiz,
+    session: quizSession,
+    instructions: {
+      totalQuestions: quiz.questions.length,
+      duration: `${quiz.duration} dakika`,
+      submitEndpoint: `/api/results`,
+      submitFormat: {
+        quizId: quiz._id,
+        answers: [
+          {
+            questionId: "question_id_here",
+            userAnswer: "answer_here"
+          }
+        ]
+      }
+    }
+  };
+
+  res.status(200).json(new ApiResponse(200, "Quiz başlatıldı", response));
+});
+
+
+
 module.exports = {
   getQuizzes,
   createQuiz,
   updateQuiz,
-  deleteQuiz
+  deleteQuiz,
+  startQuiz,
 }
